@@ -1,5 +1,6 @@
 package backend.metal
 
+import backend.Driver
 import platform.Metal.MTLCommandBufferProtocol
 import platform.Metal.MTLCommandQueueProtocol
 import platform.Metal.MTLCreateSystemDefaultDevice
@@ -10,12 +11,16 @@ object MetalPlatform {
 
     private lateinit var commandQueue: MTLCommandQueueProtocol
 
+    fun createDriver(sharedContext: Any?): Driver {
+        return MetalDriver()
+    }
+
     fun createDevice(): MTLDeviceProtocol {
         return MTLCreateSystemDefaultDevice()
             ?: error("fail to create device")
     }
 
-    fun createCommandQueue(device: MTLDeviceProtocol ): MTLCommandQueueProtocol {
+    fun createCommandQueue(device: MTLDeviceProtocol): MTLCommandQueueProtocol {
         return device.newCommandQueue()?.apply {
             label = "Filament"
             commandQueue = this

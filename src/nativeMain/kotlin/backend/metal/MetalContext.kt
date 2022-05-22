@@ -1,9 +1,11 @@
 package backend.metal
 
+import backend.assert_invariant
+import platform.CoreVideo.CVMetalTextureCacheRef
 import platform.Metal.*
 
 
-const val MAX_SAMPLE_COUNT = 8;  // Metal devices support at most 8 MSAA samples
+const val MAX_SAMPLE_COUNT: UShort = 8u  // Metal devices support at most 8 MSAA samples
 
 
 data class HighestSupportedGpuFamily(
@@ -25,6 +27,26 @@ data class MetalContext(
     val metalBufferPool = MetalBufferPool(this)
     val metalBlitter = MetalBlitter(this)
     val metalTimerQueryFence = MetalTimerQueryFence(this)
+    val pipelineStateCache = PipelineStateCache(device)
+    val samplerStateCache = SamplerStateCache(device)
+    val depthStencilStateCache = DepthStencilStateCache(device)
+    var pendingCommandBuffer: MTLCommandBufferProtocol? = null
+    val bufferPool = MetalBufferPool(this)
+    val currentDrawSwapChain: MetalSwapChain? = null
+    var textureCache: CVMetalTextureCacheRef? = null
+    var currentRenderPassEncoder: MTLRenderCommandEncoderProtocol? = null
+
+    fun isInRenderPass(): Boolean {
+        return currentRenderPassEncoder != null;
+    }
+
+    fun submitPendingCommands() {
+        pendingCommandBuffer?.let { pendingCommandBuffer ->
+            assert_invariant(pendingCommandBuffer.status != MTLCommandBufferStatusCommitted)
+            pendingCommandBuffer.commit()
+        }
+        pendingCommandBuffer = null
+    }
 }
 
 fun initializeSupportedGpuFamilies(device: MTLDeviceProtocol): HighestSupportedGpuFamily {
@@ -54,3 +76,4 @@ fun initializeSupportedGpuFamilies(device: MTLDeviceProtocol): HighestSupportedG
         }
     )
 }
+

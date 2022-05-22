@@ -26,7 +26,12 @@ kotlin {
     }
 
     sourceSets {
-        val nativeMain by getting
+        val nativeMain by getting {
+            dependencies {
+                implementation("dev.romainguy:kotlin-math:1.3.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-macosx64:1.6.1")
+            }
+        }
         val nativeTest by getting
     }
 }
