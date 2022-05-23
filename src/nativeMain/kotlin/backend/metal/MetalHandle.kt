@@ -4,34 +4,6 @@ import backend.*
 import kotlinx.cinterop.CPointer
 import platform.QuartzCore.CAMetalDrawableProtocol
 
-class MetalSwapChain: HwSwapChain() {
-
-    private var frameCompletedUserData: Any? = null
-    private var frameCompletedCallback: FrameCompletedCallback? = null
-
-    private var frameScheduledUserData: Any? = null
-    private var frameScheduledCallback: FrameScheduledCallback? = null
-
-
-    private var drawable: CAMetalDrawableProtocol? = null
-
-    fun setFrameScheduledCallback(callback: FrameScheduledCallback, user: Any) {
-        frameScheduledCallback = callback
-        frameScheduledUserData = user
-
-    }
-
-    fun setFrameCompletedCallback(callback: FrameCompletedCallback, user: Any) {
-        frameCompletedCallback = callback
-        frameCompletedUserData = user
-
-    }
-
-    fun releaseDrawable() {
-        drawable = null
-    }
-
-}
 
 class MetalVertexBuffer(
     val context: MetalContext,

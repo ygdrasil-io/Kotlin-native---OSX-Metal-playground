@@ -82,7 +82,7 @@ class MetalDriver : DriverBase() {
 
         // TODO: check to add profiling
         /*#if defined(FILAMENT_METAL_PROFILING)
-        os_signpost_interval_end(mContext->log, mContext->signpostId, "Frame encoding");
+        os_signpost_interval_end(metalContext->log, metalContext->signpostId, "Frame encoding");
         #endif*/
     }
 
@@ -132,17 +132,17 @@ class MetalDriver : DriverBase() {
     // TODO; check if any usage
     /*fun createBufferObjectR(Handle<HwBufferObject> boh, uint32_t byteCount,
     BufferObjectBinding bindingType, BufferUsage usage) {
-        construct_handle<MetalBufferObject>(boh, *mContext, usage, byteCount);
+        construct_handle<MetalBufferObject>(boh, *metalContext, usage, byteCount);
     }
 
     fun createTextureR( th: HwTexture, target: SamplerType, levels: Int,
     format: TextureFormat, samples: Int, width: Int, height: Int,
     depth: Int, usage: TextureUsage) {
         // Clamp sample count to what the device supports.
-        auto& sc = mContext->sampleCountLookup;
+        auto& sc = metalContext->sampleCountLookup;
         samples = sc[std.min(MAX_SAMPLE_COUNT, samples)];
 
-        construct_handle<MetalTexture>(th, *mContext, target, levels, format, samples,
+        construct_handle<MetalTexture>(th, *metalContext, target, levels, format, samples,
             width, height, depth, usage, TextureSwizzle.CHANNEL_0, TextureSwizzle.CHANNEL_1,
             TextureSwizzle.CHANNEL_2, TextureSwizzle.CHANNEL_3);
     }
@@ -151,10 +151,10 @@ class MetalDriver : DriverBase() {
     uint32_t depth, TextureUsage usage,
     TextureSwizzle r, TextureSwizzle g, TextureSwizzle b, TextureSwizzle a) {
         // Clamp sample count to what the device supports.
-        auto& sc = mContext->sampleCountLookup;
+        auto& sc = metalContext->sampleCountLookup;
         samples = sc[std.min(MAX_SAMPLE_COUNT, samples)];
 
-        construct_handle<MetalTexture>(th, *mContext, target, levels, format, samples,
+        construct_handle<MetalTexture>(th, *metalContext, target, levels, format, samples,
             width, height, depth, usage, r, g, b, a);
     }
 
@@ -172,7 +172,7 @@ class MetalDriver : DriverBase() {
         ASSERT_PRECONDITION(metalTexture.mipmapLevelCount == levels,
             "Imported id<MTLTexture> levels (%d) != Filament texture levels (%d)",
             metalTexture.mipmapLevelCount, levels);
-        MTLPixelFormat filamentMetalFormat = getMetalFormat(mContext, format);
+        MTLPixelFormat filamentMetalFormat = getMetalFormat(metalContext, format);
         ASSERT_PRECONDITION(metalTexture.pixelFormat == filamentMetalFormat,
             "Imported id<MTLTexture> format (%d) != Filament texture format (%d)",
             metalTexture.pixelFormat, filamentMetalFormat);
@@ -180,12 +180,12 @@ class MetalDriver : DriverBase() {
         ASSERT_PRECONDITION(metalTexture.textureType == filamentMetalType,
             "Imported id<MTLTexture> type (%d) != Filament texture type (%d)",
             metalTexture.textureType, filamentMetalType);
-        construct_handle<MetalTexture>(th, *mContext, target, levels, format, samples,
+        construct_handle<MetalTexture>(th, *metalContext, target, levels, format, samples,
             width, height, depth, usage, metalTexture);
     }
 
     fun createSamplerGroupR(Handle<HwSamplerGroup> sbh, uint32_t size) {
-        mContext->samplerGroups.insert(construct_handle<MetalSamplerGroup>(sbh, size));
+        metalContext->samplerGroups.insert(construct_handle<MetalSamplerGroup>(sbh, size));
     }
 
     fun createRenderPrimitiveR(Handle<HwRenderPrimitive> rph, int dummy) {
@@ -193,11 +193,11 @@ class MetalDriver : DriverBase() {
     }
 
     fun createProgramR(Handle<HwProgram> rph, Program&& program) {
-        construct_handle<MetalProgram>(rph, mContext->device, program);
+        construct_handle<MetalProgram>(rph, metalContext->device, program);
     }
 
     fun createDefaultRenderTargetR(Handle<HwRenderTarget> rth, int dummy) {
-        construct_handle<MetalRenderTarget>(rth, mContext);
+        construct_handle<MetalRenderTarget>(rth, metalContext);
     }*/
 
     override fun createRenderTarget(
@@ -255,16 +255,16 @@ class MetalDriver : DriverBase() {
     fun createSwapChainR(Handle<HwSwapChain> sch, void* nativeWindow, uint64_t flags) {
         if (UTILS_UNLIKELY(flags & SWAP_CHAIN_CONFIG_APPLE_CVPIXELBUFFER)) {
             CVPixelBufferRef pixelBuffer = (CVPixelBufferRef) nativeWindow;
-            construct_handle<MetalSwapChain>(sch, *mContext, pixelBuffer, flags);
+            construct_handle<MetalSwapChain>(sch, *metalContext, pixelBuffer, flags);
         } else {
             auto* metalLayer = (__bridge CAMetalLayer*) nativeWindow;
-            construct_handle<MetalSwapChain>(sch, *mContext, metalLayer, flags);
+            construct_handle<MetalSwapChain>(sch, *metalContext, metalLayer, flags);
         }
     }
 
     fun createSwapChainHeadlessR(Handle<HwSwapChain> sch,
     uint32_t width, uint32_t height, uint64_t flags) {
-        construct_handle<MetalSwapChain>(sch, *mContext, width, height, flags);
+        construct_handle<MetalSwapChain>(sch, *metalContext, width, height, flags);
     }
 
     fun createTimerQueryR(Handle<HwTimerQuery> tqh, int) {
@@ -318,13 +318,13 @@ class MetalDriver : DriverBase() {
     Handle<HwFence> fun createFenceS() noexcept {
         // The handle must be constructed here, as a synchronous call to wait might happen before
         // createFenceR is executed.
-        return alloc_and_construct_handle<MetalFence, HwFence>(*mContext);
+        return alloc_and_construct_handle<MetalFence, HwFence>(*metalContext);
     }
 
     Handle<HwSync> fun createSyncS() noexcept {
         // The handle must be constructed here, as a synchronous call to getSyncStatus might happen
         // before createSyncR is executed.
-        return alloc_and_construct_handle<MetalFence, HwSync>(*mContext);
+        return alloc_and_construct_handle<MetalFence, HwSync>(*metalContext);
     }
 
     Handle<HwSwapChain> fun createSwapChainS() noexcept {
@@ -360,8 +360,8 @@ class MetalDriver : DriverBase() {
         auto* bo = handle_cast<MetalBufferObject>(boh);
         // Unbind this buffer object from any uniform slots it's still bound to.
         bo->boundUniformBuffers.forEachSetBit([this](size_t index) {
-                mContext->uniformState[index].buffer = nullptr;
-            mContext->uniformState[index].bound = false;
+                metalContext->uniformState[index].buffer = nullptr;
+            metalContext->uniformState[index].bound = false;
         });
         destruct_handle<MetalBufferObject>(boh);
     }
@@ -384,12 +384,12 @@ class MetalDriver : DriverBase() {
         }
         // Unbind this sampler group from our internal state.
         auto* metalSampler = handle_cast<MetalSamplerGroup>(sbh);
-        for (auto& samplerBinding : mContext->samplerBindings) {
+        for (auto& samplerBinding : metalContext->samplerBindings) {
             if (samplerBinding == metalSampler) {
                 samplerBinding = {};
             }
         }
-        mContext->samplerGroups.erase(metalSampler);
+        metalContext->samplerGroups.erase(metalSampler);
         destruct_handle<MetalSamplerGroup>(sbh);
     }
 
@@ -399,7 +399,7 @@ class MetalDriver : DriverBase() {
         }
 
         // Unbind this texture from any sampler groups that currently reference it.
-        for (auto* metalSamplerGroup : mContext->samplerGroups) {
+        for (auto* metalSamplerGroup : metalContext->samplerGroups) {
             const SamplerGroup.Sampler* samplers = metalSamplerGroup->sb->getSamplers();
             for (size_t i = 0; i < metalSamplerGroup->sb->getSize(); i++) {
             const SamplerGroup.Sampler* sampler = samplers + i;
@@ -410,13 +410,12 @@ class MetalDriver : DriverBase() {
         }
 
         destruct_handle<MetalTexture>(th);
-    }
+    }*/
 
-    fun destroyRenderTarget(Handle<HwRenderTarget> rth) {
-        if (rth) {
-            destruct_handle<MetalRenderTarget>(rth);
-        }
+    override fun destroyRenderTarget(rth: HwRenderTarget) {
+        // TODO; check if any use
     }
+    /*
 
     fun destroySwapChain(Handle<HwSwapChain> sch) {
         if (sch) {
@@ -446,11 +445,11 @@ class MetalDriver : DriverBase() {
         // This must be done before calling bufferPool->reset() to ensure no buffers are in flight.
         finish();
 
-        mContext->bufferPool->reset();
-        mContext->commandQueue = nil;
+        metalContext->bufferPool->reset();
+        metalContext->commandQueue = null;
 
-        MetalExternalImage.shutdown(*mContext);
-        mContext->blitter->shutdown();
+        MetalExternalImage.shutdown(*metalContext);
+        metalContext->blitter->shutdown();
     }
 
     ShaderModel fun getShaderModel() const noexcept {
@@ -506,7 +505,7 @@ class MetalDriver : DriverBase() {
     /*
 
     bool fun isTextureSwizzleSupported() {
-        return mContext->supportsTextureSwizzling;
+        return metalContext->supportsTextureSwizzling;
     }*/
 
     override fun isTextureFormatMipmappable(format: TextureFormat): Boolean {
@@ -537,7 +536,7 @@ class MetalDriver : DriverBase() {
 
     /*
     bool fun isRenderTargetFormatSupported(TextureFormat format) {
-        MTLPixelFormat mtlFormat = getMetalFormat(mContext, format);
+        MTLPixelFormat mtlFormat = getMetalFormat(metalContext, format);
         // RGB9E5 isn't supported on Mac as a color render target.
         return mtlFormat != MTLPixelFormatInvalid && mtlFormat != MTLPixelFormatRGB9E5Float;
     }
@@ -545,8 +544,8 @@ class MetalDriver : DriverBase() {
     bool fun isFrameBufferFetchSupported() {
         // FrameBuffer fetch is achievable via "programmable blending" in Metal, and only supported on
         // Apple GPUs with readWriteTextureSupport.
-        return mContext->highestSupportedGpuFamily.apple >= 1 &&
-        mContext->device.readWriteTextureSupport;
+        return metalContext->highestSupportedGpuFamily.apple >= 1 &&
+        metalContext->device.readWriteTextureSupport;
     }
 
     bool fun isFrameBufferFetchMultiSampleSupported() {
@@ -583,7 +582,7 @@ class MetalDriver : DriverBase() {
     }
 
     uint8_t fun getMaxDrawBuffers() {
-        return std.min(mContext->maxColorRenderTargets, MRT.MAX_SUPPORTED_RENDER_TARGET_COUNT);
+        return std.min(metalContext->maxColorRenderTargets, MRT.MAX_SUPPORTED_RENDER_TARGET_COUNT);
     }
     */
     suspend fun updateIndexBuffer(ibh: HwIndexBuffer, data: BufferDescriptor, byteOffset: Int) {
@@ -611,7 +610,7 @@ class MetalDriver : DriverBase() {
 
     fun update2DImage(Handle<HwTexture> th, uint32_t level, uint32_t xoffset,
     uint32_t yoffset, uint32_t width, uint32_t height, PixelBufferDescriptor&& data) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "update2DImage must be called outside of a render pass.");
         auto tex = handle_cast<MetalTexture>(th);
         tex->loadImage(level, MTLRegionMake2D(xoffset, yoffset, width, height), data);
@@ -625,7 +624,7 @@ class MetalDriver : DriverBase() {
     uint32_t xoffset, uint32_t yoffset, uint32_t zoffset,
     uint32_t width, uint32_t height, uint32_t depth,
     PixelBufferDescriptor&& data) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "update3DImage must be called outside of a render pass.");
         auto tex = handle_cast<MetalTexture>(th);
         tex->loadImage(level, MTLRegionMake3D(xoffset, yoffset, zoffset, width, height, depth), data);
@@ -634,7 +633,7 @@ class MetalDriver : DriverBase() {
 
     fun updateCubeImage(Handle<HwTexture> th, uint32_t level,
     PixelBufferDescriptor&& data, FaceOffsets faceOffsets) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "updateCubeImage must be called outside of a render pass.");
         auto tex = handle_cast<MetalTexture>(th);
         tex->loadCubeImage(faceOffsets, level, data);
@@ -670,7 +669,7 @@ class MetalDriver : DriverBase() {
 
     bool fun getTimerQueryValue(Handle<HwTimerQuery> tqh, uint64_t* elapsedTime) {
         auto* tq = handle_cast<MetalTimerQuery>(tqh);
-        return mContext->timerQueryImpl->getQueryResult(tq, elapsedTime);
+        return metalContext->timerQueryImpl->getQueryResult(tq, elapsedTime);
     }
 
     SyncStatus fun getSyncStatus(Handle<HwSync> sh) {
@@ -709,24 +708,24 @@ class MetalDriver : DriverBase() {
     fun beginRenderPass(Handle<HwRenderTarget> rth,
     const RenderPassParams& params) {
         auto renderTarget = handle_cast<MetalRenderTarget>(rth);
-        mContext->currentRenderTarget = renderTarget;
-        mContext->currentRenderPassFlags = params.flags;
+        metalContext->currentRenderTarget = renderTarget;
+        metalContext->currentRenderPassFlags = params.flags;
 
         MTLRenderPassDescriptor* descriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         renderTarget->setUpRenderPassAttachments(descriptor, params);
 
-        mContext->currentRenderPassEncoder =
-        [getPendingCommandBuffer(mContext) renderCommandEncoderWithDescriptor:descriptor];
-        if (!mContext->groupMarkers.empty()) {
-                mContext->currentRenderPassEncoder.label =
-            [NSString stringWithCString:mContext->groupMarkers.top()
+        metalContext->currentRenderPassEncoder =
+        [getPendingCommandBuffer(metalContext) renderCommandEncoderWithDescriptor:descriptor];
+        if (!metalContext->groupMarkers.empty()) {
+                metalContext->currentRenderPassEncoder.label =
+            [NSString stringWithCString:metalContext->groupMarkers.top()
             encoding:NSUTF8StringEncoding];
         }
 
         // Flip the viewport, because Metal's screen space is vertically flipped that of Filament's.
         NSInteger renderTargetHeight =
-        mContext->currentRenderTarget->isDefaultRenderTarget() ?
-        mContext->currentReadSwapChain->getSurfaceHeight() : mContext->currentRenderTarget->height;
+        metalContext->currentRenderTarget->isDefaultRenderTarget() ?
+        metalContext->currentReadSwapChain->getSurfaceHeight() : metalContext->currentRenderTarget->height;
         MTLViewport metalViewport {
             .originX = static_cast<double>(params.viewport.left),
             .originY = renderTargetHeight - static_cast<double>(params.viewport.bottom) -
@@ -736,25 +735,25 @@ class MetalDriver : DriverBase() {
             .znear = static_cast<double>(params.depthRange.near),
             .zfar = static_cast<double>(params.depthRange.far)
         };
-        [mContext->currentRenderPassEncoder setViewport:metalViewport];
+        [metalContext->currentRenderPassEncoder setViewport:metalViewport];
 
         // Metal requires a new command encoder for each render pass, and they cannot be reused.
         // We must bind certain states for each command encoder, so we dirty the states here to force a
         // rebinding at the first the draw call of this pass.
-        mContext->pipelineState.invalidate();
-        mContext->depthStencilState.invalidate();
-        mContext->cullModeState.invalidate();
-        mContext->windingState.invalidate();
+        metalContext->pipelineState.invalidate();
+        metalContext->depthStencilState.invalidate();
+        metalContext->cullModeState.invalidate();
+        metalContext->windingState.invalidate();
     }
 
     fun nextSubpass(int dummy) {}
 
     fun endRenderPass(int dummy) {
-        [mContext->currentRenderPassEncoder endEncoding];
+        [metalContext->currentRenderPassEncoder endEncoding];
 
-        // Command encoders are one time use. Set it to nil to release the encoder and ensure we don't
+        // Command encoders are one time use. Set it to null to release the encoder and ensure we don't
         // accidentally use it again.
-        mContext->currentRenderPassEncoder = nil;
+        metalContext->currentRenderPassEncoder = null;
     }*/
 
     override fun setRenderPrimitiveBuffer(rph: HwRenderPrimitive, vbh: HwVertexBuffer, ibh: HwIndexBuffer) {
@@ -783,29 +782,29 @@ class MetalDriver : DriverBase() {
     fun makeCurrent(Handle<HwSwapChain> schDraw, Handle<HwSwapChain> schRead) {
         ASSERT_PRECONDITION_NON_FATAL(schDraw, "A draw SwapChain must be set.")
         auto* drawSwapChain = handle_cast<MetalSwapChain>(schDraw)
-        mContext.currentDrawSwapChain = drawSwapChain
+        metalContext.currentDrawSwapChain = drawSwapChain
 
         if (schRead) {
             auto* readSwapChain = handle_cast<MetalSwapChain>(schRead)
-            mContext.currentReadSwapChain = readSwapChain
+            metalContext.currentReadSwapChain = readSwapChain
         }
     }
 
     fun commit(Handle<HwSwapChain> sch) {
         auto* swapChain = handle_cast<MetalSwapChain>(sch)
         swapChain.present()
-        submitPendingCommands(mContext);
+        submitPendingCommands(metalContext);
         swapChain.releaseDrawable();
     }
 
     fun bindUniformBuffer(uint32_t index, Handle<HwBufferObject> boh) {
         auto* bo = handle_cast<MetalBufferObject>(boh);
-        auto* currentBo = mContext.uniformState[index].buffer;
+        auto* currentBo = metalContext.uniformState[index].buffer;
         if (currentBo) {
                 currentBo.boundUniformBuffers.unset(index);
         }
         bo.boundUniformBuffers.set(index);
-        mContext.uniformState[index] = UniformBufferState{
+        metalContext.uniformState[index] = UniformBufferState{
             .buffer = bo,
             .offset = 0,
             .bound = true
@@ -815,12 +814,12 @@ class MetalDriver : DriverBase() {
     fun bindUniformBufferRange(uint32_t index, Handle<HwBufferObject> boh,
     uint32_t offset, uint32_t size) {
         auto* bo = handle_cast<MetalBufferObject>(boh);
-        auto* currentBo = mContext.uniformState[index].buffer;
+        auto* currentBo = metalContext.uniformState[index].buffer;
         if (currentBo) {
                 currentBo.boundUniformBuffers.unset(index);
         }
         bo->boundUniformBuffers.set(index);
-        mContext->uniformState[index] = UniformBufferState{
+        metalContext->uniformState[index] = UniformBufferState{
             .buffer = bo,
             .offset = offset,
             .bound = true
@@ -829,7 +828,7 @@ class MetalDriver : DriverBase() {
 
     fun bindSamplers(uint32_t index, Handle<HwSamplerGroup> sbh) {
         auto sb = handle_cast<MetalSamplerGroup>(sbh);
-        mContext->samplerBindings[index] = sb;
+        metalContext->samplerBindings[index] = sb;
     }
 
     fun insertEventMarker(const char* string, uint32_t len) {
@@ -837,21 +836,21 @@ class MetalDriver : DriverBase() {
     }
 
     fun pushGroupMarker(const char* string, uint32_t len) {
-        mContext->groupMarkers.push(string);
+        metalContext->groupMarkers.push(string);
     }
 
     fun popGroupMarker(int) {
-        assert_invariant(!mContext->groupMarkers.empty());
-        mContext->groupMarkers.pop();
+        assert_invariant(!metalContext->groupMarkers.empty());
+        metalContext->groupMarkers.pop();
     }
 
     fun startCapture(int) {
         if (@available(iOS 13, *)) {
             MTLCaptureDescriptor* descriptor = [MTLCaptureDescriptor new];
-            descriptor.captureObject = mContext->device;
+            descriptor.captureObject = metalContext->device;
             descriptor.destination = MTLCaptureDestinationGPUTraceDocument;
             descriptor.outputURL = [[NSURL alloc] initFileURLWithPath:@"filament.gputrace"];
-            NSError* error = nil;
+            NSError* error = null;
             [[MTLCaptureManager sharedCaptureManager] startCaptureWithDescriptor:descriptor
                     error:&error];
             if (error) {
@@ -861,7 +860,7 @@ class MetalDriver : DriverBase() {
             // This compile-time check is used to silence deprecation warnings when compiling for the
             // iOS simulator, which only supports Metal on iOS 13.0+.
             #if (TARGET_OS_IOS && __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_13_0)
-                [[MTLCaptureManager sharedCaptureManager] startCaptureWithDevice:mContext->device];
+                [[MTLCaptureManager sharedCaptureManager] startCaptureWithDevice:metalContext->device];
             #endif
         }
     }
@@ -872,7 +871,7 @@ class MetalDriver : DriverBase() {
 
     fun readPixels(Handle<HwRenderTarget> src, uint32_t x, uint32_t y, uint32_t width,
     uint32_t height, PixelBufferDescriptor&& data) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "readPixels must be called outside of a render pass.");
 
         auto srcTarget = handle_cast<MetalRenderTarget>(src);
@@ -910,7 +909,7 @@ class MetalDriver : DriverBase() {
         textureDescriptor.storageMode = MTLStorageModeManaged;
         #endif
         textureDescriptor.usage = MTLTextureUsageShaderWrite | MTLTextureUsageRenderTarget;
-        id<MTLTexture> readPixelsTexture = [mContext->device newTextureWithDescriptor:textureDescriptor];
+        id<MTLTexture> readPixelsTexture = [metalContext->device newTextureWithDescriptor:textureDescriptor];
 
         MetalBlitter.BlitArgs args;
         args.filter = SamplerMagFilter.NEAREST;
@@ -921,17 +920,17 @@ class MetalDriver : DriverBase() {
         args.source.color = srcTexture;
         args.destination.color = readPixelsTexture;
 
-        mContext->blitter->blit(getPendingCommandBuffer(mContext), args);
+        metalContext->blitter->blit(getPendingCommandBuffer(metalContext), args);
 
         #if !defined(IOS)
         // Managed textures on macOS require explicit synchronization between GPU / CPU.
-        id <MTLBlitCommandEncoder> blitEncoder = [getPendingCommandBuffer(mContext) blitCommandEncoder];
+        id <MTLBlitCommandEncoder> blitEncoder = [getPendingCommandBuffer(metalContext) blitCommandEncoder];
         [blitEncoder synchronizeResource:readPixelsTexture];
         [blitEncoder endEncoding];
         #endif
 
         PixelBufferDescriptor* p = new PixelBufferDescriptor(std.move(data));
-        [getPendingCommandBuffer(mContext) addCompletedHandler:^(id<MTLCommandBuffer> cb) {
+        [getPendingCommandBuffer(metalContext) addCompletedHandler:^(id<MTLCommandBuffer> cb) {
             size_t stride = p->stride ? p->stride : width;
             size_t bpp = PixelBufferDescriptor.computeDataSize(p->format, p->type, 1, 1, 1);
             size_t bpr = PixelBufferDescriptor.computeDataSize(p->format, p->type, stride, 1, p->alignment);
@@ -946,63 +945,72 @@ class MetalDriver : DriverBase() {
             mipmapLevel:0];
             scheduleDestroy(std.move(*p));
         }];
-    }
+    }*/
 
-    fun blit(TargetBufferFlags buffers,
-    Handle<HwRenderTarget> dst, Viewport dstRect,
-    Handle<HwRenderTarget> src, Viewport srcRect,
-    SamplerMagFilter filter) {
+    override fun blit(buffers: TargetBufferFlags,
+     dst: HwRenderTarget,  dstRect: Viewport,
+     src: HwRenderTarget, srcRect: Viewport, filter: SamplerMagFilter) {
         // If we're the in middle of a render pass, finish it.
         // This condition should only occur during copyFrame. It's okay to end the render pass because
         // we don't issue any other rendering commands.
-        if (mContext->currentRenderPassEncoder) {
-            [mContext->currentRenderPassEncoder endEncoding];
-            mContext->currentRenderPassEncoder = nil;
+        metalContext.currentRenderPassEncoder?.endEncoding()
+        metalContext.currentRenderPassEncoder = null;
+
+
+        val srcTarget = src as MetalRenderTarget
+        val dstTarget = dst as MetalRenderTarget
+
+        if ((buffers.value and (TargetBufferFlags.COLOR_ALL.value and TargetBufferFlags.COLOR0.value.inv())) != 0u) {
+            error("Blitting only supports COLOR0")
         }
 
-        auto srcTarget = handle_cast<MetalRenderTarget>(src);
-        auto dstTarget = handle_cast<MetalRenderTarget>(dst);
-
-        ASSERT_PRECONDITION(
-            !(buffers & (TargetBufferFlags.COLOR_ALL & ~TargetBufferFlags.COLOR0)),
-        "Blitting only supports COLOR0");
-
-        ASSERT_PRECONDITION(srcRect.left >= 0 && srcRect.bottom >= 0 &&
-                dstRect.left >= 0 && dstRect.bottom >= 0,
-            "Source and destination rects must be positive.");
+        if (srcRect.left < 0 && srcRect.bottom < 0 &&
+            dstRect.left < 0 && dstRect.bottom < 0) {
+            error("Source and destination rects must be positive.")
+        }
 
         // Metal's texture coordinates have (0, 0) at the top-left of the texture, but Filament's
         // coordinates have (0, 0) at bottom-left.
-        const NSInteger srcHeight =
-            srcTarget->isDefaultRenderTarget() ?
-        mContext->currentReadSwapChain->getSurfaceHeight() : srcTarget->height;
-        MTLRegion srcRegion = MTLRegionMake2D(
-                (NSUInteger) srcRect.left,
-        srcHeight - (NSUInteger) srcRect.bottom - srcRect.height,
-        srcRect.width, srcRect.height);
+        val srcHeight = if(srcTarget.isDefaultRenderTarget) {
+            metalContext.currentReadSwapChain.getSurfaceHeight()
+        } else {
+            srcTarget.height
+        }
 
-        const NSInteger dstHeight =
-            dstTarget->isDefaultRenderTarget() ?
-        mContext->currentDrawSwapChain->getSurfaceHeight() : dstTarget->height;
-        MTLRegion dstRegion = MTLRegionMake2D(
-                (NSUInteger) dstRect.left,
-        dstHeight - (NSUInteger) dstRect.bottom - dstRect.height,
-        dstRect.width, dstRect.height);
+        val srcRegion = MTLRegionMake2D(
+            srcRect.left,
+            srcHeight - srcRect.bottom - srcRect.height,
+            srcRect.width,
+            srcRect.height
+        )
 
-        auto isBlitableTextureType = [](MTLTextureType t) {
-            return t == MTLTextureType2D || t == MTLTextureType2DMultisample ||
-                    t == MTLTextureType2DArray;
-        };
+        val dstHeight = if (dstTarget.isDefaultRenderTarget) {
+            metalContext.currentDrawSwapChain.getSurfaceHeight()
+        } else {
+            dstTarget.height
+        }
 
-        MetalBlitter.BlitArgs args;
-        args.filter = filter;
+        val dstRegion = MTLRegionMake2D(
+            dstRect.left,
+            dstHeight - dstRect.bottom - dstRect.height,
+            dstRect.width,
+            dstRect.height
+        )
+
+        val isBlitableTextureType:(MTLTextureType) -> Boolean = { texture ->
+            return texture == MTLTextureType2D || texture == MTLTextureType2DMultisample || texture == MTLTextureType2DArray;
+        }
+
+        val args = MetalBlitter.BlitArgs(
+            filter
+        )
         args.source.region = srcRegion;
         args.destination.region = dstRegion;
 
-        if (any(buffers & TargetBufferFlags.COLOR_ALL)) {
+        if ((buffers.value and TargetBufferFlags.COLOR_ALL.value) != 0u ) {
             // We always blit from/to the COLOR0 attachment.
-            MetalRenderTarget.Attachment srcColorAttachment = srcTarget->getReadColorAttachment(0);
-            MetalRenderTarget.Attachment dstColorAttachment = dstTarget->getDrawColorAttachment(0);
+            val srcColorAttachment = srcTarget.getReadColorAttachment(0)
+            val dstColorAttachment = dstTarget.getDrawColorAttachment(0)
 
             if (srcColorAttachment && dstColorAttachment) {
                 ASSERT_PRECONDITION(isBlitableTextureType(srcColorAttachment.getTexture().textureType) &&
@@ -1019,8 +1027,8 @@ class MetalDriver : DriverBase() {
         }
 
         if (any(buffers & TargetBufferFlags.DEPTH)) {
-            MetalRenderTarget.Attachment srcDepthAttachment = srcTarget->getDepthAttachment();
-            MetalRenderTarget.Attachment dstDepthAttachment = dstTarget->getDepthAttachment();
+            MetalRenderTarget.Attachment srcDepthAttachment = srcTarget.getDepthAttachment();
+            MetalRenderTarget.Attachment dstDepthAttachment = dstTarget.getDepthAttachment();
 
             if (srcDepthAttachment && dstDepthAttachment) {
                 ASSERT_PRECONDITION(isBlitableTextureType(srcDepthAttachment.getTexture().textureType) &&
@@ -1054,11 +1062,11 @@ class MetalDriver : DriverBase() {
             }
         }
 
-        mContext->blitter->blit(getPendingCommandBuffer(mContext), args);
+        metalContext.blitter.blit(getPendingCommandBuffer(metalContext), args);
     }
-
+/*
     fun draw(PipelineState ps, Handle<HwRenderPrimitive> rph, uint32_t instanceCount) {
-        ASSERT_PRECONDITION(mContext->currentRenderPassEncoder != nullptr,
+        ASSERT_PRECONDITION(metalContext->currentRenderPassEncoder != nullptr,
         "Attempted to draw without a valid command encoder.");
         auto primitive = handle_cast<MetalRenderPrimitive>(rph);
         auto program = handle_cast<MetalProgram>(ps.program);
@@ -1076,14 +1084,14 @@ class MetalDriver : DriverBase() {
         // Pipeline state
         MTLPixelFormat colorPixelFormat[MRT.MAX_SUPPORTED_RENDER_TARGET_COUNT] = { MTLPixelFormatInvalid };
         for (size_t i = 0; i < MRT.MAX_SUPPORTED_RENDER_TARGET_COUNT; i++) {
-            const auto& attachment = mContext->currentRenderTarget->getDrawColorAttachment(i);
+            const auto& attachment = metalContext->currentRenderTarget->getDrawColorAttachment(i);
             if (!attachment) {
                 continue;
             }
             colorPixelFormat[i] = attachment.getPixelFormat();
         }
         MTLPixelFormat depthPixelFormat = MTLPixelFormatInvalid;
-        const auto& depthAttachment = mContext->currentRenderTarget->getDepthAttachment();
+        const auto& depthAttachment = metalContext->currentRenderTarget->getDepthAttachment();
         if (depthAttachment) {
             depthPixelFormat = depthAttachment.getPixelFormat();
         }
@@ -1102,7 +1110,7 @@ class MetalDriver : DriverBase() {
             colorPixelFormat[7]
         },
             .depthAttachmentPixelFormat = depthPixelFormat,
-            .sampleCount = mContext->currentRenderTarget->getSamples(),
+            .sampleCount = metalContext->currentRenderTarget->getSamples(),
             .blendState = BlendState {
             .blendingEnabled = rs.hasBlending(),
             .rgbBlendOperation = getMetalBlendOperation(rs.blendEquationRGB),
@@ -1114,26 +1122,26 @@ class MetalDriver : DriverBase() {
         },
             .colorWrite = rs.colorWrite
         };
-        mContext->pipelineState.updateState(pipelineState);
-        if (mContext->pipelineState.stateChanged()) {
+        metalContext->pipelineState.updateState(pipelineState);
+        if (metalContext->pipelineState.stateChanged()) {
             id<MTLRenderPipelineState> pipeline =
-            mContext->pipelineStateCache.getOrCreateState(pipelineState);
-            assert_invariant(pipeline != nil);
-            [mContext->currentRenderPassEncoder setRenderPipelineState:pipeline];
+            metalContext->pipelineStateCache.getOrCreateState(pipelineState);
+            assert_invariant(pipeline != null);
+            [metalContext->currentRenderPassEncoder setRenderPipelineState:pipeline];
         }
 
         // Cull mode
         MTLCullMode cullMode = getMetalCullMode(rs.culling);
-        mContext->cullModeState.updateState(cullMode);
-        if (mContext->cullModeState.stateChanged()) {
-            [mContext->currentRenderPassEncoder setCullMode:cullMode];
+        metalContext->cullModeState.updateState(cullMode);
+        if (metalContext->cullModeState.stateChanged()) {
+            [metalContext->currentRenderPassEncoder setCullMode:cullMode];
         }
 
         // Front face winding
         MTLWinding winding = rs.inverseFrontFaces ? MTLWindingClockwise : MTLWindingCounterClockwise;
-        mContext->windingState.updateState(winding);
-        if (mContext->windingState.stateChanged()) {
-            [mContext->currentRenderPassEncoder setFrontFacingWinding:winding];
+        metalContext->windingState.updateState(winding);
+        if (metalContext->windingState.stateChanged()) {
+            [metalContext->currentRenderPassEncoder setFrontFacingWinding:winding];
         }
 
         // Set the depth-stencil state, if a state change is needed.
@@ -1142,16 +1150,16 @@ class MetalDriver : DriverBase() {
             depthState.compareFunction = getMetalCompareFunction(rs.depthFunc);
             depthState.depthWriteEnabled = rs.depthWrite;
         }
-        mContext->depthStencilState.updateState(depthState);
-        if (mContext->depthStencilState.stateChanged()) {
+        metalContext->depthStencilState.updateState(depthState);
+        if (metalContext->depthStencilState.stateChanged()) {
             id<MTLDepthStencilState> state =
-            mContext->depthStencilStateCache.getOrCreateState(depthState);
-            assert_invariant(state != nil);
-            [mContext->currentRenderPassEncoder setDepthStencilState:state];
+            metalContext->depthStencilStateCache.getOrCreateState(depthState);
+            assert_invariant(state != null);
+            [metalContext->currentRenderPassEncoder setDepthStencilState:state];
         }
 
         if (ps.polygonOffset.constant != 0.0 || ps.polygonOffset.slope != 0.0) {
-            [mContext->currentRenderPassEncoder setDepthBias:ps.polygonOffset.constant
+            [metalContext->currentRenderPassEncoder setDepthBias:ps.polygonOffset.constant
             slopeScale:ps.polygonOffset.slope
             clamp:0.0];
         }
@@ -1160,7 +1168,7 @@ class MetalDriver : DriverBase() {
         //  must be intersected with viewport (see OpenGLDriver.cpp for implementation details)
 
         // Bind uniform buffers.
-        MetalBuffer* uniformsToBind[Program.BINDING_COUNT] = { nil };
+        MetalBuffer* uniformsToBind[Program.BINDING_COUNT] = { null };
         NSUInteger offsets[Program.BINDING_COUNT] = { 0 };
 
         enumerateBoundUniformBuffers([&uniformsToBind, &offsets](const UniformBufferState& state,
@@ -1168,7 +1176,7 @@ class MetalDriver : DriverBase() {
             uniformsToBind[index] = buffer;
             offsets[index] = state.offset;
         });
-        MetalBuffer.bindBuffers(getPendingCommandBuffer(mContext), mContext->currentRenderPassEncoder,
+        MetalBuffer.bindBuffers(getPendingCommandBuffer(metalContext), metalContext->currentRenderPassEncoder,
         0, MetalBuffer.Stage.VERTEX | MetalBuffer.Stage.FRAGMENT, uniformsToBind, offsets,
         Program.BINDING_COUNT);
 
@@ -1192,7 +1200,7 @@ class MetalDriver : DriverBase() {
                 .minLod = metalTexture->minLod,
                 .maxLod = metalTexture->maxLod
             };
-            return mContext->samplerStateCache.getOrCreateState(s);
+            return metalContext->samplerStateCache.getOrCreateState(s);
         };
 
         id<MTLTexture> texturesToBindVertex[MAX_VERTEX_SAMPLER_COUNT] = {};
@@ -1212,7 +1220,7 @@ class MetalDriver : DriverBase() {
             if (!textureToBind) {
                 utils.slog.w << "Warning: no texture bound at binding point " << (size_t) binding
                 << " at the vertex shader." << utils.io.endl;
-                textureToBind = getOrCreateEmptyTexture(mContext);
+                textureToBind = getOrCreateEmptyTexture(metalContext);
             }
 
             auto& samplerToBind = samplersToBindVertex[binding];
@@ -1223,14 +1231,14 @@ class MetalDriver : DriverBase() {
         // Metal requires all samplers referenced in shaders to be bound.
         for (auto& sampler : samplersToBindVertex) {
             if (!sampler) {
-                sampler = mContext->samplerStateCache.getOrCreateState({});
+                sampler = metalContext->samplerStateCache.getOrCreateState({});
             }
         }
 
         NSRange vertexSamplerRange = NSMakeRange(0, MAX_VERTEX_SAMPLER_COUNT);
-        [mContext->currentRenderPassEncoder setVertexTextures:texturesToBindVertex
+        [metalContext->currentRenderPassEncoder setVertexTextures:texturesToBindVertex
         withRange:vertexSamplerRange];
-        [mContext->currentRenderPassEncoder setVertexSamplerStates:samplersToBindVertex
+        [metalContext->currentRenderPassEncoder setVertexSamplerStates:samplersToBindVertex
         withRange:vertexSamplerRange];
 
         id<MTLTexture> texturesToBindFragment[MAX_FRAGMENT_SAMPLER_COUNT] = {};
@@ -1250,7 +1258,7 @@ class MetalDriver : DriverBase() {
             if (!textureToBind) {
                 utils.slog.w << "Warning: no texture bound at binding point " << (size_t) binding
                 << " at the fragment shader." << utils.io.endl;
-                textureToBind = getOrCreateEmptyTexture(mContext);
+                textureToBind = getOrCreateEmptyTexture(metalContext);
             }
 
             auto& samplerToBind = samplersToBindFragment[binding];
@@ -1261,14 +1269,14 @@ class MetalDriver : DriverBase() {
         // Metal requires all samplers referenced in shaders to be bound.
         for (auto& sampler : samplersToBindFragment) {
             if (!sampler) {
-                sampler = mContext->samplerStateCache.getOrCreateState({});
+                sampler = metalContext->samplerStateCache.getOrCreateState({});
             }
         }
 
         NSRange fragmentSamplerRange = NSMakeRange(0, MAX_FRAGMENT_SAMPLER_COUNT);
-        [mContext->currentRenderPassEncoder setFragmentTextures:texturesToBindFragment
+        [metalContext->currentRenderPassEncoder setFragmentTextures:texturesToBindFragment
         withRange:fragmentSamplerRange];
-        [mContext->currentRenderPassEncoder setFragmentSamplerStates:samplersToBindFragment
+        [metalContext->currentRenderPassEncoder setFragmentSamplerStates:samplersToBindFragment
         withRange:fragmentSamplerRange];
 
         // Bind the vertex buffers.
@@ -1291,22 +1299,22 @@ class MetalDriver : DriverBase() {
         }
 
         const auto bufferCount = bufferIndex;
-        MetalBuffer.bindBuffers(getPendingCommandBuffer(mContext), mContext->currentRenderPassEncoder,
+        MetalBuffer.bindBuffers(getPendingCommandBuffer(metalContext), metalContext->currentRenderPassEncoder,
         VERTEX_BUFFER_START, MetalBuffer.Stage.VERTEX, buffers,
         vertexBufferOffsets, bufferCount);
 
         // Bind the zero buffer, used for missing vertex attributes.
         static const char bytes[16] = { 0 };
-        [mContext->currentRenderPassEncoder setVertexBytes:bytes
+        [metalContext->currentRenderPassEncoder setVertexBytes:bytes
         length:16
         atIndex:(VERTEX_BUFFER_START + ZERO_VERTEX_BUFFER)];
 
         MetalIndexBuffer* indexBuffer = primitive->indexBuffer;
 
-        id<MTLCommandBuffer> cmdBuffer = getPendingCommandBuffer(mContext);
+        id<MTLCommandBuffer> cmdBuffer = getPendingCommandBuffer(metalContext);
         id<MTLBuffer> metalIndexBuffer = indexBuffer->buffer.getGpuBufferForDraw(cmdBuffer);
         size_t offset = indexBuffer->buffer.getGpuBufferStreamOffset();
-        [mContext->currentRenderPassEncoder drawIndexedPrimitives:getMetalPrimitiveType(primitive->type)
+        [metalContext->currentRenderPassEncoder drawIndexedPrimitives:getMetalPrimitiveType(primitive->type)
         indexCount:primitive->count
         indexType:getIndexType(indexBuffer->elementSize)
         indexBuffer:metalIndexBuffer
@@ -1315,17 +1323,17 @@ class MetalDriver : DriverBase() {
     }
 
     fun beginTimerQuery(Handle<HwTimerQuery> tqh) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "beginTimerQuery must be called outside of a render pass.");
         auto* tq = handle_cast<MetalTimerQuery>(tqh);
-        mContext->timerQueryImpl->beginTimeElapsedQuery(tq);
+        metalContext->timerQueryImpl->beginTimeElapsedQuery(tq);
     }
 
     fun endTimerQuery(Handle<HwTimerQuery> tqh) {
-        ASSERT_PRECONDITION(!isInRenderPass(mContext),
+        ASSERT_PRECONDITION(!isInRenderPass(metalContext),
             "endTimerQuery must be called outside of a render pass.");
         auto* tq = handle_cast<MetalTimerQuery>(tqh);
-        mContext->timerQueryImpl->endTimeElapsedQuery(tq);
+        metalContext->timerQueryImpl->endTimeElapsedQuery(tq);
     }
 
     fun enumerateSamplerGroups(
@@ -1341,7 +1349,7 @@ class MetalDriver : DriverBase() {
                 continue;
             }
 
-            const auto* metalSamplerGroup = mContext->samplerBindings[blockInfo.samplerGroup];
+            const auto* metalSamplerGroup = metalContext->samplerBindings[blockInfo.samplerGroup];
             if (!metalSamplerGroup) {
                 // Do not emit warning here. For example this can arise when skinning is enabled
                 // and the morphing texture is unused.
@@ -1362,7 +1370,7 @@ class MetalDriver : DriverBase() {
     fun enumerateBoundUniformBuffers(
     const std.function<void(const UniformBufferState&, MetalBuffer*, uint32_t)>& f) {
         for (uint32_t i = 0; i < Program.BINDING_COUNT; i++) {
-            auto& thisUniform = mContext->uniformState[i];
+            auto& thisUniform = metalContext->uniformState[i];
             if (!thisUniform.bound) {
                 continue;
             }

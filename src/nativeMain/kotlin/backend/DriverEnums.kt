@@ -27,10 +27,10 @@ package backend
  * For e.g. Use Texture::Sampler instead of filament::SamplerType.
  */
 
-const val SWAP_CHAIN_CONFIG_TRANSPARENT = 0x1;
-const val SWAP_CHAIN_CONFIG_READABLE = 0x2;
-const val SWAP_CHAIN_CONFIG_ENABLE_XCB = 0x4;
-const val SWAP_CHAIN_CONFIG_APPLE_CVPIXELBUFFER = 0x8;
+const val SWAP_CHAIN_CONFIG_TRANSPARENT: ULong = 0x1u
+const val SWAP_CHAIN_CONFIG_READABLE = 0x2
+const val SWAP_CHAIN_CONFIG_ENABLE_XCB = 0x4
+const val SWAP_CHAIN_CONFIG_APPLE_CVPIXELBUFFER = 0x8
 
 const val MAX_VERTEX_ATTRIBUTE_COUNT = 16;   // This is guaranteed by OpenGL ES.
 const val MAX_VERTEX_SAMPLER_COUNT = 16;   // This is guaranteed by OpenGL ES.
@@ -88,7 +88,7 @@ enum class TargetBufferFlags(val value: UInt) {
 
 };
 
-fun getTargetBufferFlagsAt(index: UInt): TargetBufferFlags  {
+fun getTargetBufferFlagsAt(index: UInt): TargetBufferFlags {
     return when (index) {
         0u -> TargetBufferFlags.COLOR0
         1u -> TargetBufferFlags.COLOR1
@@ -118,16 +118,18 @@ enum class BufferUsage {
  * Defines a viewport, which is the origin and extent of the clip-space.
  * All drawing is clipped to the viewport.
  */
-/*data class Viewport {
-    int32_t left;       //!< left coordinate in window space.
-    int32_t bottom;     //!< bottom coordinate in window space.
-    uint32_t width;     //!< width in pixels
-    uint32_t height;    //!< height in pixels
+data class Viewport(
+    val left: UInt,       //!< left coordinate in window space.
+    val bottom: UInt,     //!< bottom coordinate in window space.
+    val width: UInt,     //!< width in pixels
+    val height: UInt    //!< height in pixels
+) {
+
     //! get the right coordinate in window space of the viewport
-    int32_t right () const noexcept { return left + int32_t(width); }
+    val right = left + width
     //! get the top coordinate in window space of the viewport
-    int32_t top () const noexcept { return bottom + int32_t(height); }
-};*/
+    val top = bottom + bottom
+}
 
 /**
  * Specifies the mapping of the near and far clipping plane to window coordinates.
@@ -177,12 +179,12 @@ const val SHADER_MODEL_COUNT = 3;*/
  */
 enum class PrimitiveType(value: Int) {
     // don't change the enums values (made to match GL)
-    POINTS         (0),    //!< points
-    LINES          (1),    //!< lines
-    LINE_STRIP     (3),    //!< line strip
-    TRIANGLES      (4),    //!< triangles
-    TRIANGLE_STRIP (5),    //!< triangle strip
-    NONE           (0xFF)
+    POINTS(0),    //!< points
+    LINES(1),    //!< lines
+    LINE_STRIP(3),    //!< line strip
+    TRIANGLES(4),    //!< triangles
+    TRIANGLE_STRIP(5),    //!< triangle strip
+    NONE(0xFF)
 }
 
 /**
@@ -234,10 +236,10 @@ enum class SubpassType : uint8_t {
 
 //! Texture sampler format
 enum class SamplerFormat(value: Int) {
-    INT  (0),        //!< signed integer sampler
-    UINT  (1),       //!< unsigned integer sampler
-    FLOAT  (2),      //!< float sampler
-    SHADOW  (3)      //!< shadow sampler (PCF)
+    INT(0),        //!< signed integer sampler
+    UINT(1),       //!< unsigned integer sampler
+    FLOAT(2),      //!< float sampler
+    SHADOW(3)      //!< shadow sampler (PCF)
 }
 
 /**
@@ -516,15 +518,15 @@ enum class TextureFormat {
 }
 
 //! Bitmask describing the intended Texture Usage
-enum class TextureUsage(val value: Int)  {
-    NONE                (0x0),
-    COLOR_ATTACHMENT    (0x1),                                  //!< Texture can be used as a color attachment
-    DEPTH_ATTACHMENT    (0x2),                                  //!< Texture can be used as a depth attachment
-    STENCIL_ATTACHMENT  (0x4),                                  //!< Texture can be used as a stencil attachment
-    UPLOADABLE          (0x8),                                  //!< Data can be uploaded into this texture (default)
-    SAMPLEABLE          (0x10),                                 //!< Texture can be sampled (default)
-    SUBPASS_INPUT       (0x20),                                 //!< Texture can be used as a subpass input
-    DEFAULT             (UPLOADABLE.value or SAMPLEABLE.value)  //!< Default texture usage
+enum class TextureUsage(val value: Int) {
+    NONE(0x0),
+    COLOR_ATTACHMENT(0x1),                                  //!< Texture can be used as a color attachment
+    DEPTH_ATTACHMENT(0x2),                                  //!< Texture can be used as a depth attachment
+    STENCIL_ATTACHMENT(0x4),                                  //!< Texture can be used as a stencil attachment
+    UPLOADABLE(0x8),                                  //!< Data can be uploaded into this texture (default)
+    SAMPLEABLE(0x10),                                 //!< Texture can be sampled (default)
+    SUBPASS_INPUT(0x20),                                 //!< Texture can be used as a subpass input
+    DEFAULT(UPLOADABLE.value or SAMPLEABLE.value)  //!< Default texture usage
 };
 /*
 //! Texture swizzle
@@ -690,7 +692,7 @@ enum class SamplerMinFilter(val value: Int) {
 };
 
 //! Sampler magnification filter
-enum class SamplerMagFilter(val value: Int)  {
+enum class SamplerMagFilter(val value: Int) {
     // don't change the enums values
     NEAREST(0),                //!< No filtering. Nearest neighbor is used.
     LINEAR(1)               //!< Box filtering. Weighted average of 4 neighbors is used.
@@ -722,7 +724,7 @@ data class SamplerParams(
     val filterMag: SamplerMagFilter = SamplerMagFilter.LINEAR,    //!< magnification filter (NEAREST)
     val filterMin: SamplerMinFilter = SamplerMinFilter.LINEAR_MIPMAP_NEAREST,    //!< minification filter  (NEAREST)
     val wrapS: SamplerWrapMode = SamplerWrapMode.MIRRORED_REPEAT,    //!< s-coordinate wrap mode (CLAMP_TO_EDGE)
-    val wrapT: SamplerWrapMode =  SamplerWrapMode.MIRRORED_REPEAT,    //!< t-coordinate wrap mode (CLAMP_TO_EDGE)
+    val wrapT: SamplerWrapMode = SamplerWrapMode.MIRRORED_REPEAT,    //!< t-coordinate wrap mode (CLAMP_TO_EDGE)
 
     val wrapR: SamplerWrapMode = SamplerWrapMode.MIRRORED_REPEAT,    //!< r-coordinate wrap mode (CLAMP_TO_EDGE)
     val anisotropyLog2: Int = 3,    //!< anisotropy level (0)
@@ -942,26 +944,30 @@ static constexpr ShaderStageFlags ALL_SHADER_STAGE_FLAGS = { true, true };*/
  *
  */
 /*data class RenderPassFlags {
-    *//**
-     * bitmask indicating which buffers to clear at the beginning of a render pass.
-     * This implies discard.
-     *//*
+    */
+/**
+ * bitmask indicating which buffers to clear at the beginning of a render pass.
+ * This implies discard.
+ *//*
     TargetBufferFlags clear;
 
-    *//**
-     * bitmask indicating which buffers to discard at the beginning of a render pass.
-     * Discarded buffers have uninitialized content, they must be entirely drawn over or cleared.
-     *//*
+    */
+/**
+ * bitmask indicating which buffers to discard at the beginning of a render pass.
+ * Discarded buffers have uninitialized content, they must be entirely drawn over or cleared.
+ *//*
     TargetBufferFlags discardStart;
 
-    *//**
-     * bitmask indicating which buffers to discard at the end of a render pass.
-     * Discarded buffers' content becomes invalid, they must not be read from again.
-     *//*
+    */
+/**
+ * bitmask indicating which buffers to discard at the end of a render pass.
+ * Discarded buffers' content becomes invalid, they must not be read from again.
+ *//*
     TargetBufferFlags discardEnd;
 };
 
-*//**
+*/
+/**
  * Parameters of a render pass.
  *//*
 struct RenderPassParams {
@@ -979,21 +985,23 @@ struct RenderPassParams {
     //! Stencil value to clear the stencil buffer with
     uint32_t clearStencil = 0;
 
-    *//**
-     * The subpass mask specifies which color attachments are designated for read-back in the second
-     * subpass. If this is zero, the render pass has only one subpass. The least significant bit
-     * specifies that the first color attachment in the render target is a subpass input.
-     *
-     * For now only 2 subpasses are supported, so only the lower 8 bits are used, one for each color
-     * attachment (see MRT::MAX_SUPPORTED_RENDER_TARGET_COUNT).
-     *//*
+    */
+/**
+ * The subpass mask specifies which color attachments are designated for read-back in the second
+ * subpass. If this is zero, the render pass has only one subpass. The least significant bit
+ * specifies that the first color attachment in the render target is a subpass input.
+ *
+ * For now only 2 subpasses are supported, so only the lower 8 bits are used, one for each color
+ * attachment (see MRT::MAX_SUPPORTED_RENDER_TARGET_COUNT).
+ *//*
     uint16_t subpassMask = 0;
 
-    *//**
-     * This mask makes a promise to the backend about read-only usage of the depth attachment (bit
-     * 0) and the stencil attachment (bit 1). Some backends need to know if writes are disabled in
-     * order to allow sampling from the depth attachment.
-     *//*
+    */
+/**
+ * This mask makes a promise to the backend about read-only usage of the depth attachment (bit
+ * 0) and the stencil attachment (bit 1). Some backends need to know if writes are disabled in
+ * order to allow sampling from the depth attachment.
+ *//*
     uint16_t readOnlyDepthStencil = 0;
 
     static constexpr uint16_t READONLY_DEPTH = 1 << 0;
@@ -1018,7 +1026,6 @@ enum class Workaround {
     // the whole render pass.
     ALLOW_READ_ONLY_ANCILLARY_FEEDBACK_LOOP
 };
-
 
 
 /*

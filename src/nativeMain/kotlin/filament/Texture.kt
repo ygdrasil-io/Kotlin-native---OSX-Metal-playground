@@ -1,6 +1,7 @@
 package filament
 
 import backend.*
+import kotlin.math.max
 
 class Texture(
 
@@ -10,7 +11,7 @@ class Texture(
     val levelCount: ULong = 1u,
     val format: TextureFormat = TextureFormat.RGBA8,
     val mHandle: HwTexture,
-    val mSampleCount: UShort = 1u
+    val sampleCount: UShort = 1u
 /*
 FStream* mStream = nullptr;
 uint32_t mDepth = 1;
@@ -51,23 +52,23 @@ Usage mUsage = Usage.DEFAULT;*/
         val generateMipsForLayer : (TargetBufferInfo) -> Unit = { proto ->
 
             // Wrap miplevel 0 in a render target so that we can use it as a blit source.
-            var level = 0
+            var level: UShort = 0u
             val srcw = width
             val srch = height
             proto.handle = mHandle
             proto.level = level++
             val srcrth = driver.createRenderTarget(
-                    TargetBufferFlags.COLOR, srcw, srch, sampleCount, proto
+                    TargetBufferFlags.COLOR, srcw, srch, sampleCount, MRT(proto)
             )
 
             // Perform a blit for all miplevels down to 1x1.
             var dstrth: HwRenderTarget
             do {
-                uint32_t dstw = std . max (srcw > > 1u, 1u);
-                uint32_t dsth = std . max (srch > > 1u, 1u);
-                proto.level = level++;
+                val dstw = max (srcw shr 1, 1u)
+                val dsth = max (srch shr 1, 1u)
+                proto.level = level++
                 dstrth = driver.createRenderTarget(
-                    TargetBufferFlags.COLOR, dstw, dsth, mSampleCount, proto, {}, {});
+                    TargetBufferFlags.COLOR, dstw, dsth, sampleCount, MRT(proto);
                 driver.blit(
                     TargetBufferFlags.COLOR,
                     dstrth, { 0, 0, dstw, dsth },

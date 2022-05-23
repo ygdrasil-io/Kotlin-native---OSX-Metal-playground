@@ -34,6 +34,12 @@ abstract class Driver {
         targetBufferFlags: TargetBufferFlags, width: UInt, height: UInt,
         samples: UShort, color: MRT, depth: TargetBufferInfo = TargetBufferInfo(), stencil: TargetBufferInfo = TargetBufferInfo()
     ): HwRenderTarget
+
+    abstract fun destroyRenderTarget(rth: HwRenderTarget)
+
+    abstract fun blit(buffers: TargetBufferFlags,
+                      dst: HwRenderTarget,  dstRect: Viewport,
+                      src: HwRenderTarget, srcRect: Viewport, filter: SamplerMagFilter)
 }
 
 

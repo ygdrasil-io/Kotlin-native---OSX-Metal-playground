@@ -32,9 +32,11 @@ data class MetalContext(
     val depthStencilStateCache = DepthStencilStateCache(device)
     var pendingCommandBuffer: MTLCommandBufferProtocol? = null
     val bufferPool = MetalBufferPool(this)
-    val currentDrawSwapChain: MetalSwapChain? = null
     var textureCache: CVMetalTextureCacheRef? = null
     var currentRenderPassEncoder: MTLRenderCommandEncoderProtocol? = null
+
+    var currentDrawSwapChain: MetalSwapChain? = null
+    var currentReadSwapChain: MetalSwapChain? = null
 
     fun isInRenderPass(): Boolean {
         return currentRenderPassEncoder != null;
