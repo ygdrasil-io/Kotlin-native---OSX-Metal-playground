@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.7.21"
+    kotlin("multiplatform") version "1.8.0"
 }
 
 group = "io.ygdrasil"
@@ -26,6 +26,12 @@ kotlin {
     }
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:multik-core:0.2.0")
+            }
+        }
+
         val nativeMain by getting
         val nativeTest by getting
     }
